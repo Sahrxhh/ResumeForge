@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ResumeForge</title>
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#ff7a59"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>\n<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{--bg:#fff4ec;--card:#fff;--ink:#2b2140;--mut:#7a6e8c;--a:#ff7a59;--b:#7c4dff;--line:#eadfd6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17122a;--card:#241c3d;--ink:#f4eeff;--mut:#a99cc4;--line:#382d5a}}
@@ -54,7 +54,12 @@ pre{text-align:left;background:#120d24;color:#c9f;padding:12px;border-radius:12p
 <g stroke="#2b2140" stroke-width="4" stroke-linecap="round"><path d="M42 70h34M42 79h34"/></g></svg>
 <h1>ResumeForge</h1><button class="btn" id="inst" style="display:none;width:auto;padding:8px 18px;font-size:13px;margin:8px 0">⬇ Install App</button><p>ATS-friendly resume • LaTeX engine • 1-tap PDF</p></div>
 
-<div id="form">
+<div class="card" id="accountCard"><h2>🔐 Account &amp; Privacy</h2>
+<p id="authStatus" style="margin:0 0 10px;color:var(--mut);font-size:13px">Sign in with Google to use your account. Resume data will only be sent after you give consent.</p>
+<div id="googleBtn" style="min-height:44px"></div>
+<label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;color:var(--ink);font-size:13px"><input id="dataConsent" type="checkbox" style="width:auto;margin-top:3px"> I agree that the resume details I enter can be stored securely and sent to the ResumeForge backend for generating my resume and maintaining my resume record.</label>
+<p style="margin:8px 0 0;color:var(--mut);font-size:11px">Microphone, camera and media permissions are not requested because ResumeForge does not need them.</p>
+</div><div id="form">
 <div class="card"><h2>👤 Personal</h2>
 <label>Full name</label><input id="name">
 <div class="row"><div><label>Email</label><input id="email" type="email"></div><div><label>Phone</label><input id="phone" type="tel"></div></div>
@@ -82,7 +87,10 @@ pre{text-align:left;background:#120d24;color:#c9f;padding:12px;border-radius:12p
 <button class="btn ghost" onclick="back()">🎨 Change design / Edit details</button></div>
 </div>
 <script>
-const $=id=>document.getElementById(id);let DATA={},TEX='';const T={tpl:'classic',color:'#1a4fd6',font:'sans'};
+const $=id=>document.getElementById(id);
+const GOOGLE_CLIENT_ID='YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const BACKEND_URL='YOUR_BACKEND_URL';
+let GOOGLE_USER=null,DATA={},TEX='';const T={tpl:'classic',color:'#1a4fd6',font:'sans'};
 const lines=s=>String(s||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
 function addExp(v={}){const d=document.createElement('div');d.className='item';d.innerHTML='<label>Job title</label><input class="t"><div class="row"><div><label>Company</label><input class="c"></div><div><label>Dates</label><input class="d" placeholder="Jan 2022 - Present"></div></div><label>Points (one per line)</label><textarea class="p"></textarea><button class="btn ghost" type="button" onclick="this.parentNode.remove()">Remove</button>';d.querySelector('.t').value=v.t||'';d.querySelector('.c').value=v.c||'';d.querySelector('.d').value=v.d||'';d.querySelector('.p').value=(v.p||[]).join('\n');$('exp').appendChild(d)}
 function addEdu(v={}){const d=document.createElement('div');d.className='item';d.innerHTML='<label>Degree</label><input class="t"><div class="row"><div><label>College</label><input class="c"></div><div><label>Year</label><input class="d"></div></div><button class="btn ghost" type="button" onclick="this.parentNode.remove()">Remove</button>';d.querySelector('.t').value=v.t||'';d.querySelector('.c').value=v.c||'';d.querySelector('.d').value=v.d||'';$('edu').appendChild(d)}
@@ -92,7 +100,32 @@ function collect(){const g=id=>[...document.querySelectorAll('#'+id+' .item')].m
 function mark(){document.querySelectorAll('[data-k]').forEach(b=>b.classList.toggle('on',T[b.dataset.k]===b.dataset.v));const p=$('pv'),h=$('pvh'),sx=$('pvs'),c=T.color,t=T.tpl;p.style.fontFamily=T.font==='serif'?'Georgia,serif':'system-ui,sans-serif';h.style.textAlign=(t==='classic'||t==='minimal')?'center':'left';h.style.background=t==='bold'?c:'';h.style.color=t==='bold'?'#fff':'';$('pvn').style.color=t==='modern'?c:(t==='bold'?'#fff':'inherit');sx.style.color=(t==='classic'||t==='minimal')?'#111':c;sx.style.borderBottom=t==='minimal'?'none':'1px solid '+c}
 document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{T[b.dataset.k]=b.dataset.v;mark()});mark();
 function buildTex(D){const contact=[D.email,D.phone,D.city,D.link].filter(Boolean).map(esc).join(' $|$ ');let t='\\documentclass[10pt,a4paper]{article}\n\\usepackage[margin=0.7in]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n';if(T.font==='sans')t+='\\renewcommand{\\familydefault}{\\sfdefault}\n';t+='\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\definecolor{acc}{HTML}{'+T.color.slice(1).toUpperCase()+'}\n\\usepackage[hidelinks]{hyperref}\n\\usepackage{titlesec}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\titleformat{\\section}{\\large\\bfseries}{}{0em}{}[\\titlerule]\n\\titlespacing*{\\section}{0pt}{10pt}{5pt}\n\\setlist[itemize]{leftmargin=*,itemsep=1pt,topsep=2pt}\n\\begin{document}\n';t+='\\begin{center}{\\LARGE\\bfseries '+esc(D.name)+'}\\\\[2pt]'+(D.title?esc(D.title)+'\\\\[2pt]':'')+contact+'\\end{center}\n';if(D.summary)t+='\\section{Professional Summary}\n'+esc(D.summary)+'\n';if(D.skills.length)t+='\\section{Skills}\n'+D.skills.map(esc).join(', ')+'\n';if(D.exp.length){t+='\\section{Experience}\n';D.exp.forEach(e=>{t+='\\textbf{'+esc(e.t)+'} \\hfill '+esc(e.d)+'\\\\\n'+esc(e.c)+'\n\\begin{itemize}\n'+e.p.map(p=>'\\item '+esc(p)).join('\n')+'\n\\end{itemize}\n'})}if(D.edu.length){t+='\\section{Education}\n';D.edu.forEach(e=>{t+='\\textbf{'+esc(e.t)+'} \\hfill '+esc(e.d)+'\\\\\n'+esc(e.c)+'\\\\[3pt]\n'})}if(D.certs.length)t+='\\section{Certifications and Projects}\n\\begin{itemize}\n'+D.certs.map(p=>'\\item '+esc(p)).join('\n')+'\n\\end{itemize}\n';return t+'\\end{document}\n'}
-function generate(){DATA=collect();TEX=buildTex(DATA);$('form').style.display='none';$('load').style.display='block';scrollTo(0,0);const st=['Reading your details…','Writing LaTeX code…','Optimizing for ATS keywords…','Checking single-column layout…','Final polish ✨'];let i=0;const iv=setInterval(()=>{if(i>=st.length){clearInterval(iv);$('load').style.display='none';$('tex').textContent=TEX;$('done').style.display='block';return}$('step').textContent=st[i];$('pb').style.width=((i+1)/st.length*100)+'%';i++},500)}
+function handleGoogleCredential(resp){
+ try{
+  const p=JSON.parse(atob(resp.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+  GOOGLE_USER={id:p.sub,name:p.name||'',email:p.email||'',picture:p.picture||''};
+  $('authStatus').textContent='Signed in as '+GOOGLE_USER.email;
+  $('authStatus').style.color='#12a150';
+ }catch(e){$('authStatus').textContent='Google sign-in failed. Please try again.'}
+}
+function initGoogle(){
+ if(GOOGLE_CLIENT_ID.startsWith('YOUR_')){ $('googleBtn').innerHTML='<div style="padding:10px;border:1px dashed var(--line);border-radius:12px;color:var(--mut);font-size:12px">Google Sign-In is ready but needs the Google Client ID in the app configuration.</div>'; return; }
+ if(window.google?.accounts?.id){google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCredential});google.accounts.id.renderButton($('googleBtn'),{theme:'outline',size:'large',width:'100%',text:'signin_with'});}
+ else setTimeout(initGoogle,500);
+}
+window.addEventListener('load',initGoogle);
+async function sendResumeRecord(){
+ if(BACKEND_URL.startsWith('YOUR_')) return {configured:false};
+ const payload={googleUser:GOOGLE_USER,resume:DATA,template:T.tpl,accent:T.color,font:T.font,latex:TEX,createdAt:new Date().toISOString()};
+ const res=await fetch(BACKEND_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ if(!res.ok) throw new Error('Backend request failed');
+ return {configured:true};
+}
+async function generate(){DATA=collect();
+ if(!GOOGLE_USER){alert('Please sign in with Google first.');return}
+ if(!$('dataConsent').checked){alert('Please accept the data consent before generating the resume.');return}TEX=buildTex(DATA);$('form').style.display='none';$('load').style.display='block';scrollTo(0,0);const st=['Reading your details…','Writing LaTeX code…','Optimizing for ATS keywords…','Checking single-column layout…','Final polish ✨'];let i=0;const iv=setInterval(()=>{if(i>=st.length){clearInterval(iv);$('load').style.display='none';$('tex').textContent=TEX;$('done').style.display='block';
+ sendResumeRecord().then(r=>{if(r.configured)$('step').textContent='';}).catch(()=>alert('Resume created, but the backend could not save the record. Please try again later.'));
+ return}$('step').textContent=st[i];$('pb').style.width=((i+1)/st.length*100)+'%';i++},500)}
 function back(){$('done').style.display='none';$('form').style.display='block'}
 function save(name,blob){if(window.Android&&window.Android.saveFile){const r=new FileReader();r.onload=()=>window.Android.saveFile(name,blob.type||'application/octet-stream',String(r.result).split(',')[1]);r.readAsDataURL(blob);return}const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function saveTex(){save('resume.txt',new Blob([TEX],{type:'text/plain'}))}
