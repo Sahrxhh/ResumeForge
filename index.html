@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ResumeForge</title>
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#ff7a59"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>\n<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>\n<script src="https://accounts.google.com/gsi/client" async defer></script>\n<script src="config.js"></script>
 <style>
 :root{--bg:#fff4ec;--card:#fff;--ink:#2b2140;--mut:#7a6e8c;--a:#ff7a59;--b:#7c4dff;--line:#eadfd6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17122a;--card:#241c3d;--ink:#f4eeff;--mut:#a99cc4;--line:#382d5a}}
@@ -88,8 +88,9 @@ pre{text-align:left;background:#120d24;color:#c9f;padding:12px;border-radius:12p
 </div>
 <script>
 const $=id=>document.getElementById(id);
-const GOOGLE_CLIENT_ID='YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-const BACKEND_URL='YOUR_BACKEND_URL';
+const APP_CONFIG=window.RESUMEFORGE_CONFIG||{};
+const GOOGLE_CLIENT_ID=APP_CONFIG.GOOGLE_CLIENT_ID||'';
+const BACKEND_URL=APP_CONFIG.BACKEND_URL||'';
 let GOOGLE_USER=null,DATA={},TEX='';const T={tpl:'classic',color:'#1a4fd6',font:'sans'};
 const lines=s=>String(s||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
 function addExp(v={}){const d=document.createElement('div');d.className='item';d.innerHTML='<label>Job title</label><input class="t"><div class="row"><div><label>Company</label><input class="c"></div><div><label>Dates</label><input class="d" placeholder="Jan 2022 - Present"></div></div><label>Points (one per line)</label><textarea class="p"></textarea><button class="btn ghost" type="button" onclick="this.parentNode.remove()">Remove</button>';d.querySelector('.t').value=v.t||'';d.querySelector('.c').value=v.c||'';d.querySelector('.d').value=v.d||'';d.querySelector('.p').value=(v.p||[]).join('\n');$('exp').appendChild(d)}
@@ -109,13 +110,13 @@ function handleGoogleCredential(resp){
  }catch(e){$('authStatus').textContent='Google sign-in failed. Please try again.'}
 }
 function initGoogle(){
- if(GOOGLE_CLIENT_ID.startsWith('YOUR_')){ $('googleBtn').innerHTML='<div style="padding:10px;border:1px dashed var(--line);border-radius:12px;color:var(--mut);font-size:12px">Google Sign-In is ready but needs the Google Client ID in the app configuration.</div>'; return; }
+ if(!GOOGLE_CLIENT_ID){ $('googleBtn').innerHTML='<div style="padding:10px;border:1px dashed var(--line);border-radius:12px;color:var(--mut);font-size:12px">Google Sign-In is ready but needs the Google Client ID in the app configuration.</div>'; return; }
  if(window.google?.accounts?.id){google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCredential});google.accounts.id.renderButton($('googleBtn'),{theme:'outline',size:'large',width:'100%',text:'signin_with'});}
  else setTimeout(initGoogle,500);
 }
 window.addEventListener('load',initGoogle);
 async function sendResumeRecord(){
- if(BACKEND_URL.startsWith('YOUR_')) return {configured:false};
+ if(!BACKEND_URL) return {configured:false};
  const payload={googleUser:GOOGLE_USER,resume:DATA,template:T.tpl,accent:T.color,font:T.font,latex:TEX,createdAt:new Date().toISOString()};
  const res=await fetch(BACKEND_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
  if(!res.ok) throw new Error('Backend request failed');
@@ -124,7 +125,7 @@ async function sendResumeRecord(){
 async function generate(){DATA=collect();
  if(!GOOGLE_USER){alert('Please sign in with Google first.');return}
  if(!$('dataConsent').checked){alert('Please accept the data consent before generating the resume.');return}TEX=buildTex(DATA);$('form').style.display='none';$('load').style.display='block';scrollTo(0,0);const st=['Reading your details…','Writing LaTeX code…','Optimizing for ATS keywords…','Checking single-column layout…','Final polish ✨'];let i=0;const iv=setInterval(()=>{if(i>=st.length){clearInterval(iv);$('load').style.display='none';$('tex').textContent=TEX;$('done').style.display='block';
- sendResumeRecord().then(r=>{if(r.configured)$('step').textContent='';}).catch(()=>alert('Resume created, but the backend could not save the record. Please try again later.'));
+ sendResumeRecord().then(r=>{if(r.configured){$('step').textContent='';}}).catch(()=>alert('Resume created, but the backend could not save the record. Please try again later.'));
  return}$('step').textContent=st[i];$('pb').style.width=((i+1)/st.length*100)+'%';i++},500)}
 function back(){$('done').style.display='none';$('form').style.display='block'}
 function save(name,blob){if(window.Android&&window.Android.saveFile){const r=new FileReader();r.onload=()=>window.Android.saveFile(name,blob.type||'application/octet-stream',String(r.result).split(',')[1]);r.readAsDataURL(blob);return}const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
