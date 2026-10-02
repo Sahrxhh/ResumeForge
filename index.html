@@ -91,7 +91,7 @@ const $=id=>document.getElementById(id);
 const APP_CONFIG=window.RESUMEFORGE_CONFIG||{};
 const GOOGLE_CLIENT_ID=APP_CONFIG.GOOGLE_CLIENT_ID||'';
 const BACKEND_URL=APP_CONFIG.BACKEND_URL||'';
-let GOOGLE_USER=null,DATA={},TEX='';const T={tpl:'classic',color:'#1a4fd6',font:'sans'};
+let GOOGLE_USER=null,GOOGLE_ID_TOKEN='',DATA={},TEX='';const T={tpl:'classic',color:'#1a4fd6',font:'sans'};
 const lines=s=>String(s||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
 function addExp(v={}){const d=document.createElement('div');d.className='item';d.innerHTML='<label>Job title</label><input class="t"><div class="row"><div><label>Company</label><input class="c"></div><div><label>Dates</label><input class="d" placeholder="Jan 2022 - Present"></div></div><label>Points (one per line)</label><textarea class="p"></textarea><button class="btn ghost" type="button" onclick="this.parentNode.remove()">Remove</button>';d.querySelector('.t').value=v.t||'';d.querySelector('.c').value=v.c||'';d.querySelector('.d').value=v.d||'';d.querySelector('.p').value=(v.p||[]).join('\n');$('exp').appendChild(d)}
 function addEdu(v={}){const d=document.createElement('div');d.className='item';d.innerHTML='<label>Degree</label><input class="t"><div class="row"><div><label>College</label><input class="c"></div><div><label>Year</label><input class="d"></div></div><button class="btn ghost" type="button" onclick="this.parentNode.remove()">Remove</button>';d.querySelector('.t').value=v.t||'';d.querySelector('.c').value=v.c||'';d.querySelector('.d').value=v.d||'';$('edu').appendChild(d)}
@@ -104,7 +104,7 @@ function buildTex(D){const contact=[D.email,D.phone,D.city,D.link].filter(Boolea
 function handleGoogleCredential(resp){
  try{
   const p=JSON.parse(atob(resp.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-  GOOGLE_USER={id:p.sub,name:p.name||'',email:p.email||'',picture:p.picture||''};
+  GOOGLE_ID_TOKEN=resp.credential; GOOGLE_USER={id:p.sub,name:p.name||'',email:p.email||'',picture:p.picture||''};
   $('authStatus').textContent='Signed in as '+GOOGLE_USER.email;
   $('authStatus').style.color='#12a150';
  }catch(e){$('authStatus').textContent='Google sign-in failed. Please try again.'}
@@ -117,9 +117,8 @@ function initGoogle(){
 window.addEventListener('load',initGoogle);
 async function sendResumeRecord(){
  if(!BACKEND_URL) return {configured:false};
- const payload={googleUser:GOOGLE_USER,resume:DATA,template:T.tpl,accent:T.color,font:T.font,latex:TEX,createdAt:new Date().toISOString()};
- const res=await fetch(BACKEND_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
- if(!res.ok) throw new Error('Backend request failed');
+ const payload={idToken:GOOGLE_ID_TOKEN,resume:DATA,template:T.tpl,accent:T.color,font:T.font,latex:TEX,createdAt:new Date().toISOString()};
+ await fetch(BACKEND_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
  return {configured:true};
 }
 async function generate(){DATA=collect();
