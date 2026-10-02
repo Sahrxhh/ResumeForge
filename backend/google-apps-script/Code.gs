@@ -5,7 +5,7 @@
 const SHEET_ID = '1bW9ImA2vW5pgk2P3zncXuI6Kq1XlDus_sBMhejGJj8E';
 const SHEET_NAME = 'Resumes';
 const ADMIN_EMAIL = 'sahrxhh.in@gmail.com';
-const GOOGLE_CLIENT_ID = 'PASTE_GOOGLE_WEB_CLIENT_ID_HERE';
+const GOOGLE_CLIENT_ID = '624122444192-v4c5cv9mkj6l0eh4ck1crppjneainjb4.apps.googleusercontent.com';
 
 function doPost(e) {
   try {
