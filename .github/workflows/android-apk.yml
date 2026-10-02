@@ -1,0 +1,36 @@
+name: Build ResumeForge APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+      - name: Prepare web app assets
+        run: |
+          mkdir -p app/src/main/assets/icons
+          cp index.html app/src/main/assets/index.html
+          cp manifest.json app/src/main/assets/manifest.json
+          cp sw.js app/src/main/assets/sw.js
+          cp icons/icon-192.png app/src/main/assets/icons/icon-192.png
+          cp icons/icon-512.png app/src/main/assets/icons/icon-512.png
+      - name: Build debug APK
+        run: gradle :app:assembleDebug --no-daemon
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ResumeForge-Android-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
