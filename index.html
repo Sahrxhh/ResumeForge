@@ -16,6 +16,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple
 @keyframes float{50%{transform:translateY(-12px) rotate(-3deg)}}
 .hero h1{margin:8px 0 2px;font-size:28px;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero p{margin:0;color:var(--mut);font-size:14px}
+.splash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg);transition:opacity .35s ease,visibility .35s ease}.splash.hide{opacity:0;visibility:hidden;pointer-events:none}.splash-inner{text-align:center}.splash-logo{width:76px;height:76px;display:block;margin:0 auto 8px}.powered{font-size:12px;color:var(--mut);letter-spacing:.3px}.powered b{color:var(--ink)}.app-footer{text-align:center;padding:20px 0 8px;color:var(--mut);font-size:12px}.app-footer b{color:var(--ink)}
 .card{background:var(--card);border-radius:20px;padding:16px;margin:14px 0;border:1px solid var(--line);box-shadow:0 8px 0 -4px var(--line),0 14px 24px rgba(124,77,255,.10);animation:rise .6s both}
 @keyframes rise{from{opacity:0;transform:translateY(24px) scale(.97)}}
 .card h2{margin:0 0 10px;font-size:16px}
@@ -85,6 +86,7 @@ pre{text-align:left;background:#120d24;color:#c9f;padding:12px;border-radius:12p
 <button class="btn pdfbtn" style="margin-top:14px" onclick="makePDF()">📄 Create PDF Resume</button>
 <button class="btn ghost" onclick="saveTex()">Download LaTeX (.txt)</button>
 <button class="btn ghost" onclick="back()">🎨 Change design / Edit details</button></div>
+</div><div class="app-footer">Powered by <b>Saharsh</b></div>
 </div>
 <script>
 const $=id=>document.getElementById(id);
@@ -114,7 +116,7 @@ function initGoogle(){
  if(window.google?.accounts?.id){google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCredential});google.accounts.id.renderButton($('googleBtn'),{theme:'outline',size:'large',width:'100%',text:'signin_with'});}
  else setTimeout(initGoogle,500);
 }
-window.addEventListener('load',initGoogle);
+window.addEventListener('load',()=>{initGoogle();setTimeout(()=>$('splash')?.classList.add('hide'),1200)});
 async function sendResumeRecord(){
  if(!BACKEND_URL) return {configured:false};
  const payload={idToken:GOOGLE_ID_TOKEN,resume:DATA,template:T.tpl,accent:T.color,font:T.font,latex:TEX,createdAt:new Date().toISOString()};
