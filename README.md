@@ -1,6 +1,6 @@
 # ResumeForge
 
-ATS-friendly resume builder web app/PWA. Fill in your details, choose a template, generate LaTeX, and create a PDF resume.
+ATS-friendly resume builder web app/PWA and Android app.
 
 ## Features
 
@@ -11,10 +11,13 @@ ATS-friendly resume builder web app/PWA. Fill in your details, choose a template
 - PDF generation
 - Installable PWA
 - Offline caching after the first visit
+- Android APK with ResumeForge app icon
 
-## Run
+## Download Android APK
 
-No build step is required. Open `index.html` in a browser.
+**[📲 Download ResumeForge APK](https://sahrxhh.github.io/ResumeForge/ResumeForge.apk)**
+
+If the link is not available yet, open the repository **Actions** tab and wait for **Build ResumeForge APK** to finish. The APK is also published by the GitHub Pages workflow when Pages is enabled.
 
 ## GitHub Pages
 
@@ -22,14 +25,14 @@ The repository includes a GitHub Actions workflow in `.github/workflows/pages.ym
 
 Enable **Settings → Pages → Source → GitHub Actions** if Pages is not already enabled.
 
-The expected Pages URL is:
+App website:
 
 **https://sahrxhh.github.io/ResumeForge/**
 
-## Download
+## Run
 
-The original `ResumeForge-github.zip` is also kept in this repository for direct download.
+No build step is required. Open `index.html` in a browser.
 
 ## Tech
 
-HTML, CSS and JavaScript with jsPDF loaded from CDN.
+HTML, CSS and JavaScript with jsPDF loaded from CDN. Android app uses a native WebView wrapper.
