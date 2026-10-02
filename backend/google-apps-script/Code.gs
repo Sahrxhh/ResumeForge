@@ -1,20 +1,8 @@
 /**
  * ResumeForge backend - Google Apps Script
- *
- * 1. Create a Google Sheet for ResumeForge records.
- * 2. Extensions -> Apps Script.
- * 3. Paste this file into Code.gs.
- * 4. Set SHEET_ID and ADMIN_EMAIL below.
- * 5. Deploy as Web app:
- *    Execute as: Me
- *    Who has access: Anyone
- * 6. Put the deployed /exec URL into config.js BACKEND_URL.
- *
- * The browser sends a Google Identity Services ID token.
- * This backend verifies it with Google's tokeninfo endpoint before saving.
+ * The ResumeForge Google Sheet ID is configured below.
  */
-
-const SHEET_ID = 'PASTE_GOOGLE_SHEET_ID_HERE';
+const SHEET_ID = '1bW9ImA2vW5pgk2P3zncXuI6Kq1XlDus_sBMhejGJj8E';
 const SHEET_NAME = 'Resumes';
 const ADMIN_EMAIL = 'sahrxhh.in@gmail.com';
 const GOOGLE_CLIENT_ID = 'PASTE_GOOGLE_WEB_CLIENT_ID_HERE';
@@ -26,7 +14,7 @@ function doPost(e) {
     if (!token) return json({ok:false,error:'Missing Google ID token'});
 
     const user = verifyGoogleToken(token);
-    if (!user || user.aud !== GOOGLE_CLIENT_ID) {
+    if (!user || user.aud !== GOOGLE_CLIENT_ID || user.iss !== 'https://accounts.google.com') {
       return json({ok:false,error:'Invalid Google sign-in'});
     }
 
@@ -54,16 +42,16 @@ function doPost(e) {
       body.template || '', body.accent || '', body.font || ''
     ]);
 
-    const subject = 'ResumeForge - New Resume Generated';
-    const text =
+    MailApp.sendEmail(
+      ADMIN_EMAIL,
+      'ResumeForge - New Resume Generated',
       'A new ResumeForge resume was generated.\n\n' +
       'Name: ' + (user.name || '') + '\n' +
       'Email: ' + (user.email || '') + '\n' +
       'Target title: ' + (resume.title || '') + '\n' +
       'Generated: ' + now.toISOString() + '\n\n' +
-      'Record saved in the ResumeForge Google Sheet.';
-
-    MailApp.sendEmail(ADMIN_EMAIL, subject, text);
+      'Record saved in the ResumeForge Google Sheet.'
+    );
 
     return json({ok:true});
   } catch (err) {
@@ -72,16 +60,14 @@ function doPost(e) {
 }
 
 function verifyGoogleToken(idToken) {
-  const url = 'https://oauth2.googleapis.com/tokeninfo?id_token=' +
-    encodeURIComponent(idToken);
+  const url = 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken);
   const res = UrlFetchApp.fetch(url, {muteHttpExceptions:true});
   if (res.getResponseCode() !== 200) return null;
   return JSON.parse(res.getContentText());
 }
 
 function json(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
+  return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
