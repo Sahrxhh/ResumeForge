@@ -7,6 +7,25 @@ jobs:
     environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+      - name: Prepare and build APK
+        run: |
+          mkdir -p app/src/main/assets/icons
+          cp index.html app/src/main/assets/index.html
+          cp manifest.json app/src/main/assets/manifest.json
+          cp sw.js app/src/main/assets/sw.js
+          cp icons/icon-192.png app/src/main/assets/icons/icon-192.png
+          cp icons/icon-512.png app/src/main/assets/icons/icon-512.png
+          gradle :app:assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ResumeForge.apk
       - uses: actions/upload-pages-artifact@v3
         with: { path: . }
       - id: d
